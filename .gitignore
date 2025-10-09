@@ -1,3 +1,7 @@
 .DS_Store
 __pycache__
 .pytest_cache
+
+# ignore python environment for pi
+pi_env/*
+!pi_env/install.sh
