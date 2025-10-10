@@ -2,6 +2,7 @@ from serial import Serial
 import numpy as np
 import threading, time
 from cal import cal
+import struct
 
 
 class SerialReader:
@@ -39,11 +40,16 @@ class SerialReader:
             try:
                 # try to take 10 differnt set of readings to get one set of accurate readings
                 for i in range(10):
-                    line = self.serial.read_until(b"\n").decode().strip()
-                    line_readings = line.split(", ")
-                    if len(line_readings) == self.num_sensors:
-                        readings = line_readings
-                        break
+                    line = self.serial.read_until(b"\r\n").rstrip(b"\r\n")
+
+                    # skip this set of readings if theere are not enough bytes
+                    try:
+                        line_readings = struct.unpack(f"{self.num_sensors}f", line)
+                        if len(line_readings) == self.num_sensors:
+                            readings = line_readings
+                            break
+                    except struct.error:
+                        pass
 
                     # increasing wait time if the readings are still not coming in properly
                     time.sleep(0.3 * (i + 1))
