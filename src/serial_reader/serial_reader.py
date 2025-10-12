@@ -3,6 +3,7 @@ import numpy as np
 import threading, time
 from cal import cal
 import struct
+from logger import logger
 
 
 class SerialReader:
@@ -13,6 +14,7 @@ class SerialReader:
         num_sensors: int,
         num_readings_per_pt: int,
         name: str,
+        logger: logger.Logger,
         timeout: int = 2,
     ):
         self.serial = Serial(serial_port, baudrate=baud_rate, timeout=timeout)
@@ -25,10 +27,12 @@ class SerialReader:
         # id is different from name because ID must not have spaces
         self.id = "-".join(name.split(" "))
 
+        self.logger = logger
+
     def __del__(self):
         self.serial.close()
 
-    def read_from_serial(self, is_first_reading) -> None:
+    def read_from_serial(self, is_first_reading: bool, current_pressure: float) -> None:
         """take a reading from serial, and place it into the readings dict"""
         # clear the current readings first
         with self.serial_lock:
@@ -39,7 +43,7 @@ class SerialReader:
             readings = None
             try:
                 # try to take 10 differnt set of readings to get one set of accurate readings
-                for i in range(10):
+                for i in range(self.num_readings_per_pt):
                     line = self.serial.read_until(b"\r\n").rstrip(b"\r\n")
 
                     # skip this set of readings if theere are not enough bytes
@@ -47,6 +51,10 @@ class SerialReader:
                         line_readings = struct.unpack(f"{self.num_sensors}f", line)
                         if len(line_readings) == self.num_sensors:
                             readings = line_readings
+                            # log the raw readings to the raw data file
+                            self.logger.log_raw_data(
+                                f"""{current_pressure},{",".join([f"{reading:.2f}" for reading in line_readings])}"""
+                            )
                             break
                     except struct.error:
                         pass
@@ -81,6 +89,11 @@ class SerialReader:
             self.all_avgs[pt_no].append((current_pressure, avg_for_pt))
 
             self.readings[pt_no] = []
+
+        # log the average readings as well
+        self.logger.log_avg_data(
+            f"""{current_pressure},{",".join([f"{val:.2f}" for val in avg_readings])}"""
+        )
 
         return avg_readings
 

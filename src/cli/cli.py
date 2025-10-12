@@ -11,6 +11,10 @@ from textual.timer import Timer
 from textual.worker import get_current_worker
 
 from serial_reader import serial_reader
+from logger import logger
+
+RAW_DATA_LV_FILENAME = "raw_readings_lv.csv"
+AVG_DATA_LV_FILENAME = "avg_readings_lv.csv"
 
 
 class CalculateLinearRegressionAction(Message):
@@ -47,6 +51,7 @@ class AutoCalCli(App):
             assert isinstance(port := config.get("port", None), str)
             assert isinstance(pt_count := config.get("pt_count", None), int)
             assert isinstance(name := config.get("name", None), str)
+
             self.pts.append(
                 serial_reader.SerialReader(
                     serial_port=port,
@@ -54,6 +59,10 @@ class AutoCalCli(App):
                     num_sensors=pt_count,
                     num_readings_per_pt=num_readings_per_pressure,
                     name=name,
+                    logger=logger.Logger(
+                        raw_data_filename=RAW_DATA_LV_FILENAME,
+                        avg_data_filename=AVG_DATA_LV_FILENAME,
+                    ),
                 )
             )
 
@@ -255,7 +264,7 @@ class CurrentCalibrationProgressIndicator(Widget):
 
             if not self.is_first_load:
                 for reader in self.pts:
-                    self.take_readings_from_serial(reader)
+                    self.take_readings_from_serial(reader, self.current_pressure)
 
             else:
                 self.is_first_load = False
@@ -265,7 +274,7 @@ class CurrentCalibrationProgressIndicator(Widget):
 
     @work(thread=True, exit_on_error=True)
     async def take_readings_from_serial(
-        self, reader: serial_reader.SerialReader
+        self, reader: serial_reader.SerialReader, current_pressure: float
     ) -> None:
         """reader to read simultaneously from each serial port"""
         worker = get_current_worker()
@@ -273,7 +282,9 @@ class CurrentCalibrationProgressIndicator(Widget):
             raise Exception("Worker errored out, aborting calibration...")
 
         for i in range(self.num_readings_per_pressure):
-            reader.read_from_serial(is_first_reading=(i == 0))
+            reader.read_from_serial(
+                is_first_reading=(i == 0), current_pressure=current_pressure
+            )
             try:
                 self.query_one(f"#{reader.get_pt_id()}-progress", ProgressBar).advance(
                     1

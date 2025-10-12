@@ -5,3 +5,6 @@ __pycache__
 # ignore python environment for pi
 pi_env/*
 !pi_env/install.sh
+
+# ignore logs
+*.csv
