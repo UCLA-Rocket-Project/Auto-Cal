@@ -377,7 +377,7 @@ class PreviousCalculationDisplay(VerticalGroup):
         table = self.query_one(f"#{self.reader.get_pt_id()}-data-table", DataTable)
 
         # create an additional column for each PT there is
-        pt_columns = [f"PT {i + 1}" for i in range(self.reader.get_num_pts())]
+        pt_columns = [f"PT {i}" for i in range(self.reader.get_num_pts())]
         table.add_column("PSI", key="Pressure")
         for pt in pt_columns:
             table.add_column(pt, key=pt)
@@ -410,7 +410,7 @@ class PreviousCalculationDisplay(VerticalGroup):
 
         # remove the old columns
         table.remove_column("Pressure")
-        pt_columns = [f"PT {i + 1}" for i in range(self.reader.get_num_pts())]
+        pt_columns = [f"PT {i}" for i in range(self.reader.get_num_pts())]
         for pt in pt_columns:
             table.remove_column(pt)
 

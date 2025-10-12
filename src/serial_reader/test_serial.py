@@ -2,7 +2,7 @@ import serial
 import struct
 
 ser = serial.Serial(
-    port="/dev/cu.usbserial-0001",
+    port="/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B6:7E:D0-if00",
     baudrate=115200,
     timeout=2,
 )
