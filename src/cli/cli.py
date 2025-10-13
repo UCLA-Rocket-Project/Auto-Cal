@@ -5,11 +5,19 @@ from textual.containers import HorizontalGroup, VerticalGroup, Container, Middle
 from textual.validation import Number
 from textual.reactive import reactive
 from textual.css.query import NoMatches
-from textual.message import Message
 from textual.widget import Widget
 from textual.timer import Timer
 from textual.worker import get_current_worker
+from textual.screen import Screen
+from textual.binding import Binding
 
+from cli.messages import (
+    CalculateLinearRegressionAction,
+    TriggerCalibrationMessageAction,
+    AverageRawReadingUpdated,
+    TableRowUpdated,
+    PressureUpdated,
+)
 from serial_reader import serial_reader
 from logger import logger
 
@@ -18,14 +26,63 @@ AVG_DATA_LV_FILENAME = "avg_readings_lv.csv"
 CAL_COEEFS_LV_FILENAME = "cals_lv.csv"
 
 
-class CalculateLinearRegressionAction(Message):
-    def __init__(self):
+class CalibrationScreen(Screen):
+    BINDINGS = [
+        Binding("ctrl+g", "calibrate", "Calibrate PTs", show=True),
+        Binding("ctrl+q", "quit", "Quit", show=True),
+        Binding("ctrl+t", "test_calibrations", "Test Calibrated Values", show=True),
+        Binding("ctrl+w", "calibrate", "Calibrate", show=False),
+    ]
+
+    def __init__(
+        self,
+        pts: list[serial_reader.SerialReader],
+        num_readings_per_pt: int,
+        hv: str,
+        lv: str,
+    ):
+        self.pts = pts
+        self.num_readings_per_pt = num_readings_per_pt
+        self.hv = hv
+        self.lv = lv
+
         super().__init__()
 
+    def compose(self) -> ComposeResult:
+        """Create header and footer"""
+        yield Header()
+        yield Footer()
+        yield FullCalibrationDisplay(
+            self.pts, self.num_readings_per_pt, self.hv, self.lv
+        )
 
-class TriggerCalibrationMessageAction(Message):
-    def __init__(self):
-        super().__init__()
+    def _post_calibration_message(self) -> None:
+        """Calculate the linear regression for all PTs"""
+        for calibration_display in self.query(PreviousCalculationDisplay):
+            calibration_display.post_message(CalculateLinearRegressionAction())
+
+    def action_calibrate(self) -> None:
+        """Tell the system to calculate the linear regression"""
+        self._post_calibration_message()
+
+    def on_trigger_calibration_message_action(
+        self, message: TriggerCalibrationMessageAction
+    ) -> None:
+        self._post_calibration_message()
+
+
+class TestCalibrationScreen(Screen):
+    BINDINGS = [
+        Binding("ctrl+g", "calibrate", "Calibrate PTs", show=False),
+        Binding("ctrl+q", "quit", "Quit", show=True),
+        Binding("ctrl+t", "test_calibrations", "Test Calibrated Values", show=False),
+        Binding("ctrl+w", "calibrate", "Switch To Calibration Mode", show=True),
+    ]
+
+    def compose(self):
+        yield Header()
+        yield Footer()
+        yield Label("Welcome to the testing screen")
 
 
 class AutoCalCli(App):
@@ -35,7 +92,8 @@ class AutoCalCli(App):
 
     BINDINGS = [
         ("ctrl+q", "quit", "Quit"),
-        ("ctrl+g", "calibrate", "Calibrate PTs"),
+        ("ctrl+t", "test_calibrations", "Test Calibratied Values"),
+        ("ctrl+w", "calibrate", "Calibrate"),
     ]
 
     def __init__(
@@ -73,43 +131,20 @@ class AutoCalCli(App):
         self.lv = lv
         super().__init__()
 
-    def compose(self) -> ComposeResult:
-        """Create header and footer"""
-        yield Header()
-        yield Footer()
-        yield FullCalibrationDisplay(
-            self.pts, self.num_readings_per_pt, self.hv, self.lv
+    def on_mount(self):
+        self.push_screen(
+            CalibrationScreen(self.pts, self.num_readings_per_pt, self.hv, self.lv)
         )
 
-    def _post_calibration_message(self) -> None:
-        """Calculate the linear regression for all PTs"""
-        for calibration_display in self.query(PreviousCalculationDisplay):
-            calibration_display.post_message(CalculateLinearRegressionAction())
+    def action_test_calibrations(self):
+        """bring up the interface for testing calibrations"""
+        if isinstance(self.screen, CalibrationScreen):
+            self.push_screen(TestCalibrationScreen())
 
-    def action_calibrate(self) -> None:
-        """Tell the system to calculate the linear regression"""
-        self._post_calibration_message()
-
-    def on_trigger_calibration_message_action(
-        self, message: TriggerCalibrationMessageAction
-    ) -> None:
-        self._post_calibration_message()
-
-
-class AverageRawReadingUpdated(Message):
-    def __init__(self, pressure: float, raw_readings: list[float], pt_id: str) -> None:
-        self.pressure = pressure
-        self.raw_readings = raw_readings
-        self.pt_id = pt_id
-        super().__init__()
-
-
-class TableRowUpdated(Message):
-    def __init__(self, pressure: float, raw_readings: list[float], pt_id: str) -> None:
-        self.pressure = pressure
-        self.raw_readings = raw_readings
-        self.pt_id = pt_id
-        super().__init__()
+    def action_calibrate(self):
+        """bring back the interface for calibrating sensors"""
+        if isinstance(self.screen, TestCalibrationScreen):
+            self.pop_screen()
 
 
 class FullCalibrationDisplay(HorizontalGroup):
@@ -172,12 +207,6 @@ class FullCalibrationDisplay(HorizontalGroup):
         prev_display_container.styles.grid_columns = container_split.strip()
 
         prev_display_container.styles.layout = "grid"
-
-
-class PressureUpdated(Message):
-    def __init__(self, pressure: float) -> None:
-        self.pressure = pressure
-        super().__init__()
 
 
 class CurrentCalibrationDisplay(VerticalGroup):
