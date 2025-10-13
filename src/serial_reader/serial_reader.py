@@ -124,6 +124,14 @@ class SerialReader:
                 pressures, avg_readings
             )
 
+        # log the calibrated values into a file
+        self.logger.log_cals(
+            f"""x,{",".join([f"{x[0]}" for x in linear_regressions.values()])}"""
+        )
+        self.logger.log_cals(
+            f"""y,{",".join([f"{x[1]}" for x in linear_regressions.values()])}"""
+        )
+
         return linear_regressions
 
     def get_pt_name(self) -> str:

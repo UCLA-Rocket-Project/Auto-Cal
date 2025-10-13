@@ -15,6 +15,7 @@ from logger import logger
 
 RAW_DATA_LV_FILENAME = "raw_readings_lv.csv"
 AVG_DATA_LV_FILENAME = "avg_readings_lv.csv"
+CAL_COEEFS_LV_FILENAME = "cals_lv.csv"
 
 
 class CalculateLinearRegressionAction(Message):
@@ -62,6 +63,7 @@ class AutoCalCli(App):
                     logger=logger.Logger(
                         raw_data_filename=RAW_DATA_LV_FILENAME,
                         avg_data_filename=AVG_DATA_LV_FILENAME,
+                        stored_calibration_filename=CAL_COEEFS_LV_FILENAME,
                     ),
                 )
             )
