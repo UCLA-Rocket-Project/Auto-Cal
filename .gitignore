@@ -6,5 +6,7 @@ __pycache__
 pi_env/*
 !pi_env/install.sh
 
+profiling_env
+
 # ignore logs
 *.csv

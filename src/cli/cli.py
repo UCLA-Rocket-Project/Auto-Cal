@@ -20,6 +20,7 @@ from cli.messages import (
 )
 from serial_reader import serial_reader
 from logger import logger
+from cli.screens import test_calibration_screen
 
 RAW_DATA_LV_FILENAME = "raw_readings_lv.csv"
 AVG_DATA_LV_FILENAME = "avg_readings_lv.csv"
@@ -32,6 +33,9 @@ class CalibrationScreen(Screen):
         Binding("ctrl+q", "quit", "Quit", show=True),
         Binding("ctrl+t", "test_calibrations", "Test Calibrated Values", show=True),
         Binding("ctrl+w", "calibrate", "Calibrate", show=False),
+        Binding(
+            "ctrl+a", "test-reading", "Test reading with calibration factor", show=False
+        ),
     ]
 
     def __init__(
@@ -69,20 +73,6 @@ class CalibrationScreen(Screen):
         self, message: TriggerCalibrationMessageAction
     ) -> None:
         self._post_calibration_message()
-
-
-class TestCalibrationScreen(Screen):
-    BINDINGS = [
-        Binding("ctrl+g", "calibrate", "Calibrate PTs", show=False),
-        Binding("ctrl+q", "quit", "Quit", show=True),
-        Binding("ctrl+t", "test_calibrations", "Test Calibrated Values", show=False),
-        Binding("ctrl+w", "calibrate", "Switch To Calibration Mode", show=True),
-    ]
-
-    def compose(self):
-        yield Header()
-        yield Footer()
-        yield Label("Welcome to the testing screen")
 
 
 class AutoCalCli(App):
@@ -139,11 +129,11 @@ class AutoCalCli(App):
     def action_test_calibrations(self):
         """bring up the interface for testing calibrations"""
         if isinstance(self.screen, CalibrationScreen):
-            self.push_screen(TestCalibrationScreen())
+            self.push_screen(test_calibration_screen.TestCalibrationScreen(self.pts))
 
     def action_calibrate(self):
         """bring back the interface for calibrating sensors"""
-        if isinstance(self.screen, TestCalibrationScreen):
+        if isinstance(self.screen, test_calibration_screen.TestCalibrationScreen):
             self.pop_screen()
 
 

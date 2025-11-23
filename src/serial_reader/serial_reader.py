@@ -32,6 +32,27 @@ class SerialReader:
     def __del__(self):
         self.serial.close()
 
+    def read_and_return(self) -> list[float]:
+        with self.serial_lock:
+            self.serial.reset_input_buffer()
+
+            # let the buffer fill up again
+            time.sleep(1)
+            self.serial.read_until(b"\r\n")
+
+            line = self.serial.read_until(b"\r\n").rstrip(b"\r\n")
+
+            readings = None
+            try:
+                readings = struct.unpack(f"{self.num_sensors}f", line)
+            except struct.error as e:
+                assert 0, f"Error unpacking struct, {len(line)} | Error: {str(e)}"
+            except UnicodeDecodeError as e:
+                assert 0, f"Unable to decode struct"
+
+            # if this passes, this will be the raw voltages read
+            return list(readings)
+
     def read_from_serial(self, is_first_reading: bool, current_pressure: float) -> None:
         """take a reading from serial, and place it into the readings dict"""
         # clear the current readings first
