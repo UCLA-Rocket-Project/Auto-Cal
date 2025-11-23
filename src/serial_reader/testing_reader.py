@@ -1,11 +1,11 @@
 import struct
+from threading import Lock
+from typing import Callable, cast
 
 from serial import Serial
-from threading import Lock
-from typing import Callable
 
-from serial_reader.serial_reader import SerialReader
 from logger.logger import Logger
+from serial_reader.serial_reader import SerialReader
 
 
 class TestingReader(SerialReader):
@@ -38,9 +38,9 @@ class TestingReader(SerialReader):
         try:
             readings = self.decode_fn(line)
         except struct.error as e:
-            assert 0, f"Error unpacking struct, {len(line)} | Error: {str(e)}"
+            assert 0, f"Error: {str(e)}. Struct had length {len(line)}"
         except UnicodeDecodeError as e:
             assert 0, f"Unable to decode struct"
 
         # if this passes, this will be the raw voltages read
-        return readings  # type: ignore
+        return cast(list[float], readings)

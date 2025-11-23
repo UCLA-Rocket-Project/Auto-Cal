@@ -1,12 +1,14 @@
-import struct, time
-import numpy as np
-from serial import Serial
+import struct
+import time
 from threading import Lock
 from typing import Callable
 
-from serial_reader.serial_reader import SerialReader
-from logger.logger import Logger
+import numpy as np
+from serial import Serial
+
 from cal import cal
+from logger.logger import Logger
+from serial_reader.serial_reader import SerialReader
 
 
 class CalibrationReader(SerialReader):
@@ -140,12 +142,6 @@ class CalibrationReader(SerialReader):
         )
 
         return linear_regressions
-
-    def get_pt_name(self) -> str:
-        return self.name
-
-    def get_num_pts(self) -> int:
-        return self.num_sensors
 
     def get_pt_id(self) -> str:
         return self.id

@@ -51,5 +51,5 @@
   <li>
   Disable input box: while taking readings & after the calibrations are complete </li>
   <li>Improve error messaging </li>
-  <li>Write output calibrations to a file</li>
+  <li>Separate average value calculation and reading from serial</li>
 </ul>

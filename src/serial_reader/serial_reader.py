@@ -1,7 +1,10 @@
-from serial import Serial
-import threading, time
-from logger import logger
+import threading
+import time
 from typing import Callable
+
+from serial import Serial
+
+from logger import logger
 
 
 class SerialReader:
@@ -45,3 +48,9 @@ class SerialReader:
 
     def __del__(self):
         self.serial.close()
+
+    def get_pt_name(self) -> str:
+        return self.name
+
+    def get_num_pts(self) -> int:
+        return self.num_sensors

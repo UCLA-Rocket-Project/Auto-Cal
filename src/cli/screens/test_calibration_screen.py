@@ -1,13 +1,11 @@
-from textual.app import ComposeResult
-from textual.screen import Screen
+from textual import work
 from textual.binding import Binding
-from textual.widgets import Footer, Header, Label, DataTable
 from textual.containers import Container
 from textual.css.query import NoMatches
-from textual import work
+from textual.screen import Screen
+from textual.widgets import DataTable, Footer, Header, Label
 
-
-from serial_reader import serial_reader
+from serial_reader.testing_reader import TestingReader
 
 
 class TestCalibrationScreen(Screen):
@@ -21,7 +19,7 @@ class TestCalibrationScreen(Screen):
         Binding("ctrl+a", "test_reading", "Read with calibration factor", show=True),
     ]
 
-    def __init__(self, pts: list[serial_reader.SerialReader]):
+    def __init__(self, pts: list[TestingReader]):
         self.pts = pts
         self.cal_constants = pts[0].logger.get_latest_set_of_cals(pts[0].get_num_pts())
         super().__init__()
@@ -57,7 +55,7 @@ class TestCalibrationScreen(Screen):
 
     @work(thread=True, exit_on_error=True)
     async def take_and_calculate_readings(self, table: DataTable):
-        raw_readings = self.pts[0].read_and_return()
+        raw_readings = self.pts[0].read()
 
         assert len(raw_readings) == len(
             self.cal_constants

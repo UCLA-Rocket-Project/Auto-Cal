@@ -1,6 +1,10 @@
-import inquirer, serial
+from typing import cast
+
+import inquirer
+import serial
 from inquirer import errors as inquirer_errors
-from serial.tools import list_ports
+
+from auto_cal_types import ConfigFields
 
 
 def validate_number(answers, current) -> bool:
@@ -46,7 +50,6 @@ class Config:
                 "baud_rate",
                 message="Controller baud rate",
                 validate=validate_number,
-                default=115200,
             ),
             inquirer.Checkbox(
                 "ports_to_read",
@@ -55,13 +58,13 @@ class Config:
             ),
         ]
 
-    def prompt(self):
+    def prompt(self) -> ConfigFields | None:
         answers = inquirer.prompt(
             self.question_stage_one, raise_keyboard_interrupt=True
         )
 
         if not answers or not (pts_to_read := answers.get("ports_to_read", None)):
-            return answers
+            return None
 
         # clean up the answers dict
         del answers["ports_to_read"]
@@ -125,4 +128,4 @@ class Config:
         if num_readings_per_pt:
             answers.update(num_readings_per_pt)
 
-        return answers
+        return cast(ConfigFields, answers)
