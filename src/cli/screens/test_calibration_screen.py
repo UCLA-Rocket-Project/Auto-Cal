@@ -9,7 +9,6 @@ from serial_reader.testing_reader import TestingReader
 
 
 class TestCalibrationScreen(Screen):
-    CSS_PATH = "test_calibration.tcss"
 
     BINDINGS = [
         Binding("ctrl+g", "calibrate", "Calibrate PTs", show=False),
