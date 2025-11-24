@@ -8,8 +8,8 @@ def calculate_linear_regression(
     Calculate linear regression coefficients using least squares method.
 
     Args:
-        x_values: Independent variable values
-        y_values: Dependent variable values
+        x_values: voltage values
+        y_values: pressure values
 
     Returns:
         tup [float, float]: (slope, intercept) where y = slope * x + intercept
@@ -34,4 +34,4 @@ def calculate_linear_regression(
 
     slope, intercept = np.polyfit(x_array, y_array, 1)
 
-    return float(np.round(slope, decimals=5)), float(np.round(intercept, decimals=5))
+    return float(np.round(slope, decimals=15)), float(np.round(intercept, decimals=5))

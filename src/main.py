@@ -3,8 +3,6 @@ import struct
 import sys
 from threading import Lock
 
-from serial import Serial
-
 from cli import cli
 from config import config_setter
 from logger.logger import Logger
@@ -44,10 +42,6 @@ def main() -> None:
         sys.exit(1)
 
     for config in answers["pt_configs"]:
-        assert isinstance(port := config.get("port", None), str)
-        config["serial"] = Serial(
-            port=port, baudrate=int(answers["baud_rate"]), timeout=1
-        )
         config["serial_lock"] = Lock()
         config["logger"] = Logger(
             raw_data_filename=(
@@ -69,6 +63,7 @@ def main() -> None:
     app = cli.AutoCalCli(
         pt_configs=answers["pt_configs"],
         num_readings_per_pressure=int(answers["num_readings_per_pt"]),
+        baudrate=answers["baud_rate"],
         hv=HV,
         lv=LV,
     )

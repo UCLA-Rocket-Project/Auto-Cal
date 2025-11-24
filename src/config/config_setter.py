@@ -36,7 +36,7 @@ PORT_HV = (
 
 
 # PORT_HV = "/dev/tty.usbserial-2110"
-PORT_LV = "/dev/tty.usbserial-0001"
+PORT_LV = "/dev/cu.usbmodem1101"
 
 
 class Config:

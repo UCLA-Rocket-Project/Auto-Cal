@@ -1,7 +1,6 @@
 from threading import Lock
 from typing import cast
 
-from serial import Serial
 from textual.app import App
 
 from auto_cal_types import PTConfigs
@@ -24,6 +23,7 @@ class AutoCalCli(App):
     def __init__(
         self,
         pt_configs: list[PTConfigs],
+        baudrate: int,
         num_readings_per_pressure: int,
         hv: str,
         lv: str,
@@ -31,7 +31,8 @@ class AutoCalCli(App):
         # dynamically load the PTs that you have to read from
         self.calibration_readers = [
             CalibrationReader(
-                serial=cast(Serial, pt["serial"]),
+                port=pt["port"],
+                baudrate=baudrate,
                 serial_lock=cast(Lock, pt["serial_lock"]),
                 num_sensors=pt["pt_count"],
                 name=pt["name"],
@@ -42,12 +43,13 @@ class AutoCalCli(App):
                 num_readings_per_pt=num_readings_per_pressure,
             )
             for pt in pt_configs
-            if pt.get("serial") and pt.get("serial_lock")
+            if pt.get("serial_lock")
         ]
 
         self.testing_readers = [
             TestingReader(
-                serial=cast(Serial, pt["serial"]),
+                port=pt["port"],
+                baudrate=baudrate,
                 serial_lock=cast(Lock, pt["serial_lock"]),
                 num_sensors=pt["pt_count"],
                 name=pt["name"],
@@ -57,7 +59,7 @@ class AutoCalCli(App):
                 expected_payload_length=pt["expected_payload_length"],
             )
             for pt in pt_configs
-            if pt.get("serial") and pt.get("serial_lock")
+            if pt.get("serial_lock")
         ]
 
         self.num_readings_per_pt = num_readings_per_pressure

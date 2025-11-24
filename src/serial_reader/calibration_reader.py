@@ -1,10 +1,8 @@
 import struct
-import time
 from threading import Lock
 from typing import Callable
 
 import numpy as np
-from serial import Serial
 
 from cal import cal
 from logger.logger import Logger
@@ -14,7 +12,8 @@ from serial_reader.serial_reader import SerialReader
 class CalibrationReader(SerialReader):
     def __init__(
         self,
-        serial: Serial,
+        port: str,
+        baudrate: int,
         serial_lock: Lock,
         num_sensors: int,
         name: str,
@@ -25,7 +24,8 @@ class CalibrationReader(SerialReader):
         num_readings_per_pt: int,
     ):
         super().__init__(
-            serial=serial,
+            port=port,
+            baudrate=baudrate,
             serial_lock=serial_lock,
             num_sensors=num_sensors,
             name=name,
@@ -52,7 +52,7 @@ class CalibrationReader(SerialReader):
         # try to take 10 differnt set of readings to get one set of accurate readings
         # NOTE: This function is potentially problematic, this might be the cause of errors
         for i in range(self.num_readings_per_pt):
-            line = self.read_raw(reset_input=is_first_reading)
+            line = self.read_raw(reset_input=False)
 
             # skip this set of readings if theere are not enough bytes
             try:
@@ -69,11 +69,6 @@ class CalibrationReader(SerialReader):
                 pass
             except UnicodeDecodeError:
                 pass
-
-            # increasing wait time if the readings are still not coming in properly
-            time.sleep(0.3 * (i + 1))
-
-            is_first_reading = False
 
         if not readings:
             raise Exception(
@@ -130,7 +125,7 @@ class CalibrationReader(SerialReader):
                 avg_readings.append(avg_reading)
 
             linear_regressions[pt] = cal.calculate_linear_regression(
-                pressures, avg_readings
+                avg_readings, pressures
             )
 
         # log the calibrated values into a file

@@ -2,8 +2,6 @@ import struct
 from threading import Lock
 from typing import Callable, cast
 
-from serial import Serial
-
 from logger.logger import Logger
 from serial_reader.serial_reader import SerialReader
 
@@ -11,7 +9,8 @@ from serial_reader.serial_reader import SerialReader
 class TestingReader(SerialReader):
     def __init__(
         self,
-        serial: Serial,
+        port: str,
+        baudrate: int,
         serial_lock: Lock,
         num_sensors: int,
         name: str,
@@ -21,7 +20,8 @@ class TestingReader(SerialReader):
         expected_payload_length: int,
     ):
         super().__init__(
-            serial=serial,
+            port=port,
+            baudrate=baudrate,
             serial_lock=serial_lock,
             num_sensors=num_sensors,
             name=name,
