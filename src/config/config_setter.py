@@ -36,7 +36,7 @@ PORT_HV = (
 
 
 # PORT_HV = "/dev/tty.usbserial-2110"
-PORT_LV = "/dev/cu.usbmodem1101"
+PORT_LV = "/dev/cu.usbmodem101"
 
 
 class Config:
@@ -56,6 +56,14 @@ class Config:
                 message="Select the sets of PTs you wish to calibrate. (Click space to select, ENTER to confirm)",
                 choices=[self.HV, self.LV],
             ),
+            inquirer.List(
+                "data_format",
+                message="Select the data format",
+                choices=[
+                    "New Format (with board timestamps)",
+                    "Old format (without board timestamps)",
+                ],
+            ),
         ]
 
     def prompt(self) -> ConfigFields | None:
@@ -63,8 +71,12 @@ class Config:
             self.question_stage_one, raise_keyboard_interrupt=True
         )
 
-        if not answers or not (pts_to_read := answers.get("ports_to_read", None)):
-            return None
+        if (
+            not answers
+            or not (pts_to_read := answers.get("ports_to_read", None))
+            or not (answers.get("data_format", None))
+        ):
+            return answers
 
         # clean up the answers dict
         del answers["ports_to_read"]

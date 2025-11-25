@@ -22,3 +22,4 @@ class ConfigFields(TypedDict):
     baud_rate: int
     pt_configs: list[PTConfigs]
     num_readings_per_pt: int
+    data_format: str

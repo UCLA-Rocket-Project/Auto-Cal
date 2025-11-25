@@ -37,6 +37,10 @@ def main() -> None:
         print("No answers provided for set up. Exiting.")
         sys.exit(1)
 
+    if not answers.get("data_format", None):
+        print("No data format specified. Exiting.")
+        sys.exit(1)
+
     if not answers.get("pt_configs", None):
         print("No PTs to calibrate. Exiting.")
         sys.exit(1)
@@ -57,8 +61,16 @@ def main() -> None:
             ),
         )
         config["stop_sequence"] = CONTROL_CHARACTERS
-        config["decode_fn"] = decode_fn
-        config["expected_payload_length"] = 32 + 2  # 4 floats and 2 escape characters
+        config["decode_fn"] = (
+            new_decode_fn
+            if answers["data_format"] == "New Format (with board timestamps)"
+            else old_decode_fn
+        )
+        config["expected_payload_length"] = (
+            40 + 2
+            if answers["data_format"] == "New Format (with board timestamps)"
+            else 32 + 2
+        )
 
     app = cli.AutoCalCli(
         pt_configs=answers["pt_configs"],
@@ -70,11 +82,17 @@ def main() -> None:
     app.run()
 
 
-def decode_fn(line: bytes) -> list[float]:
+def old_decode_fn(line: bytes) -> list[float]:
     """Dont do error handling, let the callers do it, since their error handling logic is quite different"""
     # first remove the control characters
     line = line.removesuffix(CONTROL_CHARACTERS)
     return list(struct.unpack("8f", line))
+
+
+def new_decode_fn(line: bytes) -> list[float]:
+    """New format of data with board timestamp and packet count at the end"""
+    line = line.removesuffix(CONTROL_CHARACTERS)
+    return list(struct.unpack("8f2I", line))[:-2]
 
 
 if __name__ == "__main__":

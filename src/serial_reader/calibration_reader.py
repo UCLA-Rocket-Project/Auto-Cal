@@ -65,9 +65,9 @@ class CalibrationReader(SerialReader):
                     )
                     break
             # let the loop try for a few times before exiting
-            except struct.error:
+            except struct.error as e:
                 pass
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as e:
                 pass
 
         if not readings:
