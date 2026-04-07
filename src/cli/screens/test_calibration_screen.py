@@ -42,7 +42,7 @@ class TestCalibrationScreen(Screen):
 
         pt_rows = [f"PT {i}" for i in range(self.pts[0].get_num_pts())]
         for constants, row_key in zip(self.cal_constants, pt_rows):
-            table.add_row(row_key, constants[0], constants[1], key=row_key)
+            table.add_row(row_key, f"{constants[0]:.8f}", f"{constants[1]:.8f}", key=row_key)
 
     def action_test_reading(self):
         """Read from serial, and calculate the resultant pressure using the calibration factors saved"""
