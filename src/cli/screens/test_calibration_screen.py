@@ -67,10 +67,10 @@ class TestCalibrationScreen(Screen):
             table.update_cell(
                 row_key=row_key,
                 column_key="Pressure",
-                value=reading,
+                value=f"{reading:.8f}",
             )
             table.update_cell(
-                row_key=row_key, column_key="Raw pressure", value=raw_readings[i]
+                row_key=row_key, column_key="Raw pressure", value=f"{raw_readings[i]:.8f}"
             )
 
     # plan: add a button here that can be clicked when we want to test calibrations

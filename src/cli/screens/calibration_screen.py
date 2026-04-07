@@ -357,7 +357,8 @@ class PreviousCalculationDisplay(VerticalGroup):
 
         # only add rows to the table if the values are valid
         if message.pressure >= 0 and message.pressure >= 0:
-            table.add_row(message.pressure, *message.raw_readings)
+            formatted_messages = [f"{m:.8f}" for m in message.raw_readings]
+            table.add_row(message.pressure, *formatted_messages)
 
     def on_calculate_linear_regression_action(
         self, message: CalculateLinearRegressionAction
@@ -385,8 +386,8 @@ class PreviousCalculationDisplay(VerticalGroup):
         lrs = self.reader.get_all_linear_regressions()
 
         # add the m values
-        slopes = [val[0] for val in lrs.values()]
+        slopes = [f"{val[0]:.8f}" for val in lrs.values()]
         table.add_row("m", *slopes)
 
-        intercepts = [val[1] for val in lrs.values()]
+        intercepts = [f"{val[1]:.8f}" for val in lrs.values()]
         table.add_row("c", *intercepts)

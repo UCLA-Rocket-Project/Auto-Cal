@@ -61,7 +61,7 @@ class CalibrationReader(SerialReader):
                     readings = line_readings
                     # log the raw readings to the raw data file
                     self.logger.log_raw_data(
-                        f"""{current_pressure},{",".join([f"{reading:.2f}" for reading in line_readings])}"""
+                        f"""{current_pressure},{",".join([f"{reading:.5f}" for reading in line_readings])}"""
                     )
                     break
             # let the loop try for a few times before exiting
@@ -96,7 +96,7 @@ class CalibrationReader(SerialReader):
 
         # log the average readings as well
         self.logger.log_avg_data(
-            f"""{current_pressure},{",".join([f"{val:.2f}" for val in avg_readings])}"""
+            f"""{current_pressure},{",".join([f"{val:.5f}" for val in avg_readings])}"""
         )
 
         return avg_readings

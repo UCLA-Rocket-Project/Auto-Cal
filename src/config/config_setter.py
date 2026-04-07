@@ -30,13 +30,9 @@ def validate_port(answers, current) -> bool:
 PORT_HV = (
     "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B3:70:B0-if00"
 )
-# PORT_LV = (
-#     "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B6:7E:D0-if00"
-# )
-
-
-# PORT_HV = "/dev/tty.usbserial-2110"
-PORT_LV = "/dev/cu.usbmodem101"
+PORT_LV = (
+    "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B6:7E:D0-if00"
+)
 
 
 class Config:
