@@ -34,6 +34,8 @@ def calculate_linear_regression(
 
     try:
         slope, intercept = np.polyfit(x_array, y_array, 1)
+    
+    #Error occurs when PTs constantly output 0
     except np.linalg.LinAlgError:
         slope, intercept = (-1, -1)
 
