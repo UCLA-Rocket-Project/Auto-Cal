@@ -32,6 +32,9 @@ def calculate_linear_regression(
     x_array = np.asarray(x_values, dtype=float)
     y_array = np.asarray(y_values, dtype=float)
 
-    slope, intercept = np.polyfit(x_array, y_array, 1)
+    try:
+        slope, intercept = np.polyfit(x_array, y_array, 1)
+    except np.linalg.LinAlgError:
+        slope, intercept = (-1, -1)
 
     return float(np.round(slope, decimals=15)), float(np.round(intercept, decimals=5))
