@@ -90,7 +90,9 @@ class FullCalibrationDisplay(HorizontalGroup):
     ):
         self.num_readings_per_pressure = num_readings_per_pressure
         self.pts = pts
-        self.total_num_pts = sum([i.get_num_pts() for i in pts])
+        self.total_num_pts = sum(
+            len(reader.selected_sensor_indices) for reader in pts
+        )
         self.hv = hv
         self.lv = lv
         super().__init__()
@@ -123,7 +125,7 @@ class FullCalibrationDisplay(HorizontalGroup):
 
         container_split = ""
         for pt in self.pts:
-            container_split += f" {int( (pt.get_num_pts() + 1) / (self.total_num_pts + len(self.pts) ) * 100)}%"
+            container_split += f" {int((len(pt.selected_sensor_indices) + 1) / (self.total_num_pts + len(self.pts)) * 100)}%"
 
         print("the style is ", container_split.strip())
         prev_display_container.styles.grid_columns = container_split.strip()
@@ -341,7 +343,7 @@ class PreviousCalculationDisplay(VerticalGroup):
         table = self.query_one(f"#{self.reader.get_pt_id()}-data-table", DataTable)
 
         # create an additional column for each PT there is
-        pt_columns = [f"PT {i}" for i in range(self.reader.get_num_pts())]
+        pt_columns = [f"PT {i}" for i in self.reader.selected_sensor_indices]
         table.add_column("PSI", key="Pressure")
         for pt in pt_columns:
             table.add_column(pt, key=pt)
@@ -375,7 +377,7 @@ class PreviousCalculationDisplay(VerticalGroup):
 
         # remove the old columns
         table.remove_column("Pressure")
-        pt_columns = [f"PT {i}" for i in range(self.reader.get_num_pts())]
+        pt_columns = [f"PT {i}" for i in self.reader.selected_sensor_indices]
         for pt in pt_columns:
             table.remove_column(pt)
 
@@ -386,8 +388,12 @@ class PreviousCalculationDisplay(VerticalGroup):
         lrs = self.reader.get_all_linear_regressions()
 
         # add the m values
-        slopes = [f"{val[0]:.8f}" for val in lrs.values()]
+        slopes = [
+            f"{lrs[index][0]:.8f}" for index in self.reader.selected_sensor_indices
+        ]
         table.add_row("m", *slopes)
 
-        intercepts = [f"{val[1]:.8f}" for val in lrs.values()]
+        intercepts = [
+            f"{lrs[index][1]:.8f}" for index in self.reader.selected_sensor_indices
+        ]
         table.add_row("c", *intercepts)

@@ -41,6 +41,7 @@ class AutoCalCli(App):
                 stop_sequence=pt["stop_sequence"],
                 expected_payload_length=pt["expected_payload_length"],
                 num_readings_per_pt=num_readings_per_pressure,
+                selected_sensor_indices=pt["selected_sensor_indices"],
             )
             for pt in pt_configs
             if pt.get("serial_lock")
@@ -57,6 +58,7 @@ class AutoCalCli(App):
                 decode_fn=pt["decode_fn"],
                 stop_sequence=pt["stop_sequence"],
                 expected_payload_length=pt["expected_payload_length"],
+                selected_sensor_indices=pt["selected_sensor_indices"],
             )
             for pt in pt_configs
             if pt.get("serial_lock")

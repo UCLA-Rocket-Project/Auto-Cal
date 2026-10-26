@@ -9,6 +9,7 @@ from logger.logger import Logger
 class PTConfigs(TypedDict):
     port: str
     pt_count: int
+    selected_sensor_indices: list[int]
     name: str
     serial: Serial | None
     serial_lock: Union[Lock, None]
@@ -23,3 +24,4 @@ class ConfigFields(TypedDict):
     pt_configs: list[PTConfigs]
     num_readings_per_pt: int
     data_format: str
+    pi_ip: str

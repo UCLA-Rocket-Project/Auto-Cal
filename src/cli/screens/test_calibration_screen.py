@@ -20,7 +20,10 @@ class TestCalibrationScreen(Screen):
 
     def __init__(self, pts: list[TestingReader]):
         self.pts = pts
-        self.cal_constants = pts[0].logger.get_latest_set_of_cals(pts[0].get_num_pts())
+        self.cal_constants = {
+            pt.get_pt_id(): pt.logger.get_latest_set_of_cals(pt.get_num_pts())
+            for pt in pts
+        }
         super().__init__()
 
     def compose(self):
@@ -40,9 +43,17 @@ class TestCalibrationScreen(Screen):
         table.add_column("Raw pressure reading", key="Raw pressure")
         table.add_column("Calibrated Pressure Reading", key="Pressure")
 
-        pt_rows = [f"PT {i}" for i in range(self.pts[0].get_num_pts())]
-        for constants, row_key in zip(self.cal_constants, pt_rows):
-            table.add_row(row_key, f"{constants[0]:.8f}", f"{constants[1]:.8f}", key=row_key)
+        for pt in self.pts:
+            constants = self.cal_constants[pt.get_pt_id()]
+            for index in pt.selected_sensor_indices:
+                row_key = f"{pt.get_pt_id()}-PT-{index}"
+                slope, intercept = constants[index]
+                table.add_row(
+                    f"{pt.get_pt_name()} PT {index}",
+                    f"{slope:.8f}",
+                    f"{intercept:.8f}",
+                    key=row_key,
+                )
 
     def action_test_reading(self):
         """Read from serial, and calculate the resultant pressure using the calibration factors saved"""
@@ -54,24 +65,23 @@ class TestCalibrationScreen(Screen):
 
     @work(thread=True, exit_on_error=True)
     async def take_and_calculate_readings(self, table: DataTable):
-        raw_readings = self.pts[0].read()
-
-        assert len(raw_readings) == len(
-            self.cal_constants
-        ), f"Lengths of readings {len(raw_readings)} do not match up with calibration constants {len(self.cal_constants)}"
-        for i in range(len(raw_readings)):
-            row_key = f"PT {i}"
-            reading = float(self.cal_constants[i][0]) * raw_readings[i] + float(
-                self.cal_constants[i][1]
-            )
-            table.update_cell(
-                row_key=row_key,
-                column_key="Pressure",
-                value=f"{reading:.8f}",
-            )
-            table.update_cell(
-                row_key=row_key, column_key="Raw pressure", value=f"{raw_readings[i]:.8f}"
-            )
+        for pt in self.pts:
+            raw_readings = pt.read()
+            constants = self.cal_constants[pt.get_pt_id()]
+            for index, raw_reading in zip(pt.selected_sensor_indices, raw_readings):
+                row_key = f"{pt.get_pt_id()}-PT-{index}"
+                slope, intercept = constants[index]
+                reading = slope * raw_reading + intercept
+                table.update_cell(
+                    row_key=row_key,
+                    column_key="Pressure",
+                    value=f"{reading:.8f}",
+                )
+                table.update_cell(
+                    row_key=row_key,
+                    column_key="Raw pressure",
+                    value=f"{raw_reading:.8f}",
+                )
 
     # plan: add a button here that can be clicked when we want to test calibrations
     # it will: (1) load calibrations from file

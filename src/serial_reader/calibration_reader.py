@@ -22,6 +22,7 @@ class CalibrationReader(SerialReader):
         stop_sequence: bytes,
         expected_payload_length: int,
         num_readings_per_pt: int,
+        selected_sensor_indices: list[int],
     ):
         super().__init__(
             port=port,
@@ -36,8 +37,10 @@ class CalibrationReader(SerialReader):
         )
 
         self.num_readings_per_pt = num_readings_per_pt
-        self.all_avgs = {i: [] for i in range(num_sensors)}
-        self.readings = {i: [] for i in range(num_sensors)}
+        self.selected_sensor_indices = selected_sensor_indices
+        self.all_avgs = {i: [] for i in selected_sensor_indices}
+        self.readings = {i: [] for i in selected_sensor_indices}
+        self.calibration_coefficients: dict[int, tuple[float, float]] | None = None
         # id is different from name because ID must not have spaces
         self.id = "-".join(name.split(" "))
 
@@ -58,7 +61,9 @@ class CalibrationReader(SerialReader):
             try:
                 line_readings = self.decode_fn(line)
                 if len(line_readings) == self.num_sensors:
-                    readings = line_readings
+                    readings = [
+                        line_readings[index] for index in self.selected_sensor_indices
+                    ]
                     # log the raw readings to the raw data file
                     self.logger.log_raw_data(
                         f"""{current_pressure},{",".join([f"{reading:.5f}" for reading in line_readings])}"""
@@ -81,7 +86,7 @@ class CalibrationReader(SerialReader):
             )
 
         # add the reading to the dict
-        for pt_no, reading in enumerate(readings):
+        for pt_no, reading in zip(self.selected_sensor_indices, readings):
             self.readings[pt_no].append(np.float64(reading))
 
     def calculate_avg(self, current_pressure: float) -> list[float]:
@@ -129,13 +134,18 @@ class CalibrationReader(SerialReader):
             )
 
         # log the calibrated values into a file
-        self.logger.log_cals(
-            f"""x,{",".join([f"{x[0]}" for x in linear_regressions.values()])}"""
-        )
-        self.logger.log_cals(
-            f"""y,{",".join([f"{x[1]}" for x in linear_regressions.values()])}"""
-        )
+        slopes = [
+            linear_regressions.get(index, (1.0, 0.0))[0]
+            for index in range(self.num_sensors)
+        ]
+        intercepts = [
+            linear_regressions.get(index, (1.0, 0.0))[1]
+            for index in range(self.num_sensors)
+        ]
+        self.logger.log_cals(f"""x,{",".join(str(value) for value in slopes)}""")
+        self.logger.log_cals(f"""y,{",".join(str(value) for value in intercepts)}""")
 
+        self.calibration_coefficients = linear_regressions
         return linear_regressions
 
     def get_pt_id(self) -> str:
