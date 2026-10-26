@@ -34,6 +34,8 @@ def upload_calibrations(app: cli.AutoCalCli, pi_ip: str) -> None:
     parsed_ip = ipaddress.ip_address(pi_ip)
     ssh_host = f"[{pi_ip}]" if parsed_ip.version == 6 else pi_ip
     group_names = {"High-Voltage": "hv", "Low-Voltage": "lv"}
+    uploaded_any = False
+
     for reader in app.calibration_readers:
         coefficients = reader.calibration_coefficients
         if coefficients is None:
@@ -41,6 +43,7 @@ def upload_calibrations(app: cli.AutoCalCli, pi_ip: str) -> None:
 
         group = group_names[reader.get_pt_id()]
         calibration_path = Path("logs") / f"pt_calibration_{group}.json"
+        calibration_path.parent.mkdir(parents=True, exist_ok=True)
         calibration = {
             "slope": [
                 coefficients[index][0] if index in coefficients else None
@@ -56,7 +59,7 @@ def upload_calibrations(app: cli.AutoCalCli, pi_ip: str) -> None:
             json.dump(calibration, calibration_file, indent=2)
             calibration_file.write("\n")
 
-        remote_path = f"{PI_CALIBRATION_DIR}/pt_calibration_{group}.json"
+        remote_path = f"{PI_CALIBRATION_DIR}/{calibration_path.name}"
         try:
             subprocess.run(
                 [
@@ -72,6 +75,10 @@ def upload_calibrations(app: cli.AutoCalCli, pi_ip: str) -> None:
                 "or leave the Pi IP blank to skip upload."
             ) from error
         print(f"Uploaded {group.upper()} calibration to {PI_SSH_USER}@{pi_ip}.")
+        uploaded_any = True
+
+    if not uploaded_any:
+        print("No calibration coefficients were calculated; no files were uploaded.")
 
 
 def main() -> None:

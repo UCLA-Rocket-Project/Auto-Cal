@@ -115,7 +115,6 @@ class Config:
 
         del answers["ports_to_read"]
         pt_configs = []
-
         if self.HV in groups_to_read:
             hv_selection = inquirer.prompt(
                 [

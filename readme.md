@@ -96,3 +96,9 @@ In `pt_2.py`, `USE_AUTOCAL_JSON` selects the calibration source. Set it to
 `MANUAL_INTERCEPTS` lists in that script. Manual lists contain 16 values in
 channel order (`pt0` through `pt15`); update both lists before starting the
 node. Manual mode does not reload JSON file changes.
+
+If Auto-Cal JSON cannot be read or validated, the `pt_2.py` node reports an
+error and falls back to the configured manual coefficients, both at startup
+and when reloading changed files. A missing group's JSON file and unselected
+(`null`) PT slots are treated as uncalibrated and remain unscaled; they do not
+trigger the error fallback.
