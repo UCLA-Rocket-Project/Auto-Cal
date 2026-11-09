@@ -18,6 +18,8 @@
    python -m venv venv
    ```
 
+   **NOTE: A lot of MacOS devices do not alias `python` with `python3`. If this command does not work, try `python3 -m venv venv`. You can also verify that `python --version` or `python3 --version` is at least `3.3.x`. If not, you need to install online / with Homebrew.**
+
 2. Activate the virtual environment:
 
    On Windows:
