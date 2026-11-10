@@ -26,12 +26,14 @@ def validate_port(answers, current) -> bool:
             "", reason=f"{current} is currently in use"
         )
 
-
+#PRESS
 PORT_HV = (
-    "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B3:70:B0-if00"
+    "/dev/cu.usbmodem11101"
 )
+
+#ENGINE
 PORT_LV = (
-    "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_B4:3A:45:B6:7E:D0-if00"
+    "/dev/cu.usbmodem11301"
 )
 
 
